@@ -3,7 +3,7 @@
 
 #define AVG_ELEMENTS 3
 
-const char* name = "/s244720_ipc";
+const char* name = "./s244720_ipc";
 const int id = 42;
 
 struct server_info {
