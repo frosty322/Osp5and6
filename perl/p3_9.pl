@@ -1,40 +1,39 @@
 #!/usr/bin/perl -T
-use strict;
-use warnings;
-use Switch;
-use English;
+use strict; 
+use warnings qw(FATAL all);
 
+$ENV{"PATH"} = "/usr/bin";
+delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 
-my ($pid, @gid, $uid, @load, $time, $startTime, $sgn);
+my ($pid, $uid, $gid, @load, $time, $startTime);
+
+$pid = $$;
+$uid = $<;
+$gid = (split(/ /, $())[0];
+
 $startTime = time();
-$pid = $PID;
-@gid = split(/ /, $GID);
-$uid = $UID;
+$time = 0;
 
-sub up_info{
-    $time = time() - $startTime;
+$SIG{HUP} = sub { 
+        print("PID: ", $pid); 
+};
+$SIG{TERM} = sub{ 
+        print("GID: ", $gid); 
+};
+$SIG{INT} = sub { 
+        print("UID: ", $uid); 
+};
+$SIG{USR1} = sub { 
+        print("TIME: ", $time); 
+};
+$SIG{USR2} = sub { 
+        printf("LOAD: %s (1 minute)\t %s (5 minutes)\t %s (15 minutes)\n", $load[0], $load[1], $load[2]); 
+};
+
+do {
+        $time = time() - $startTime;
     @load = split(/load average: /, qx(uptime));
-    @load = split(/, /,$load[1]);
-}
-sub sig_handler{
-    &up_info;
-    print("\n");
-    switch($sgn){
-        case 0 { print("PID: ", $pid); }
-        case 1 { print("GID: ", $gid[0]); }
-        case 2 { print("UID: ", $uid); }
-        case 3 { printf("Server working %d seconds", $time); }
-        case 4 { printf("Avg load system time for 1 minute: %s \n\t 5 minutes: %s \n\t 15 minutes: %s ", $load[0], $load[1], $load[2]) } }
-    print("\n");
+    @load = split(/, /, $load[1]);
 
-}
-
-$SIG{HUP} = sub{ $sgn=0; &sig_handler; };
-$SIG{TERM} = sub{ $sgn=1; &sig_handler; };
-$SIG{INT} = sub{ $sgn=2; &sig_handler; };
-$SIG{USR1} = sub{ $sgn=3; &sig_handler; };
-$SIG{USR2} = sub{ $sgn=4; &sig_handler; };
-
-while (1){
-    &up_info;
-}
+        sleep 1;
+} while (1);
